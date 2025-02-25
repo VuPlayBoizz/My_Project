@@ -1,0 +1,64 @@
+services:
+
+  ui-service:
+    image: ui-service:v0.0.1
+    container_name: ui-service
+    build:
+      context: ./ui-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 3000:80
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+
+  database-service:
+    image: database-service:v0.0.1  
+    container_name: database-service
+    build:
+      context: ./database-service
+      dockerfile: Dockerfile  
+    restart: always
+    ports:
+      - 8081:8081
+    env_file:
+      - .env   
+    depends_on:
+      - mongodb
+
+  backend-service:
+    image: backend-service:v0.0.1
+    container_name: backend-service
+    build:
+      context: ./backend-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8082:8082
+    depends_on:
+      - database-service
+  api-gateway:
+    image: api-gateway:v0.0.1
+    container_name: api-service
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - database-service
+      - backend-service
+
+volumes:
+  mongodb_data:

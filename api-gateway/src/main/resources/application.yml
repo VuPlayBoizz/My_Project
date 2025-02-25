@@ -1,0 +1,41 @@
+server:
+  port: 8080  # API Gateway port
+  address: 0.0.0.0
+
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # Route to backend-service
+        - id: backend-service
+          uri: http://backend-service:8082  # Docker service name
+          predicates:
+            - Path=/api/metrics/**
+          filters:
+            - StripPrefix=0  # Keep the full path
+
+        # Route to database-service
+        - id: database-service
+          uri: http://database-service:8081  # Docker service name
+          predicates:
+            - Path=/api/deployments/**
+          filters:
+            - StripPrefix=0
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: DEBUG
+    reactor.netty: DEBUG
